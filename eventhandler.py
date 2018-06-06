@@ -34,41 +34,50 @@ class Table:
         event.table = self
         self.events.append(event)
 
-def CreateMasterTable(TABLE_LABELS: list(), TABLE_RANGES: list(), EVENTS: dict()) -> dict:
+class MasterTable:
+    tables = []
+    
+    def __init__(self, TABLE_LABELS, TABLE_RANGES, EVENTS) -> dict:
 
-    masterTable = {}
+        masterTable = []
 
-    for i in range(len(TABLE_LABELS)):
-        #input("Run on the "+TABLE_LABELS[i]+" table?")
-        #print("\n-----\n")
+        for i in range(len(TABLE_LABELS)):
 
-        #init table
-        label = TABLE_LABELS[i]
-        rmin = TABLE_RANGES[i][0]
-        rmax = TABLE_RANGES[i][1]
+            #init table-specific vars from lists
+            label = TABLE_LABELS[i]
+            rmin = TABLE_RANGES[i][0]
+            rmax = TABLE_RANGES[i][1]
 
-        #add events in table
-        tab = Table(label, i, rmin, rmax)
-        eve = EVENTS[label]
-        rmin = 1
-        rmax = len(eve["title"])
+            #CREATE TABLE
+            tab = Table(label, i, rmin, rmax)
+            eve = EVENTS[label]
+            rmin = 1
+            rmax = len(eve["title"])
 
-        #clear out previously populated events list because
-        #python doesn't dump it automatically when reassigning to it
-        del tab.events[:]
+            #clear out previously populated events list because
+            #python doesn't dump it automatically when reassigning to it
+            del tab.events[:]
 
-        #populate events list from provided EVENTS dict
-        for j in range(rmin, rmax+1):
+            #populate events list from provided EVENTS dict
+            for j in range(rmin, rmax+1):
 
-            tab.addEvent(Event(eve["title"][j-1],tab.name,[]))
-            masterTable[label] = tab
-            inEve = copy.copy(tab.events)
-            masterTable[label].events = inEve
+                tab.addEvent(Event(eve["title"][j-1],tab.name,[]))
+                masterTable.append(tab)
+                masterTable[i].events = copy.copy(tab.events)
 
-    return masterTable
+        self.tables = copy.copy(masterTable)
 
-        
-def debug():
+def getTable(tLabel, masterTable):
+    return masterTable[tLabel]
+
+def getRandomEvent(masterTable, tLabel):
+    mRoll= dicemachine.RollD(20)
+    for table in masterTable.tables:
+        if table.rmin < mRoll and table.rmax > mRoll:
+            eRoll=dicemachine.RollD(6)
+            return table.event[eRoll]
+    
+def debugCreateDummyMasterTable():
     TABLE_LABELS = ["Nothing","Events","Meetings","Other"]
     TABLE_RANGES = [[1,9],[10,12],[13,15],[16,20]]
     EVENTS = {
@@ -90,13 +99,18 @@ def debug():
             }
         }
 
-    masterTable = CreateMasterTable(TABLE_LABELS, TABLE_RANGES, EVENTS)
+    return MasterTable(TABLE_LABELS, TABLE_RANGES, EVENTS)
+
+def debug():
+
+    masterTable = debugCreateDummyMasterTable()
 
     input("Output log?")
     for label in TABLE_LABELS:
         t = masterTable[label]
         print("Table Name: "+t.name)
-        print("length: "+str(len(t.events)))
+        print("Table Range: "+str(t.rmin)+" - "+str(t.rmax))
+        print("# of Events: "+str(len(t.events)))
         print("---\n")
         for e in t.events:
             print(" --- Title: "+e.title)
@@ -105,7 +119,7 @@ def debug():
             print("")
         print("---")
         
-debug()
+#debug()
 
 
 
