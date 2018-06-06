@@ -1,64 +1,125 @@
 import dicemachine
+import copy
 
 class Event:
-    name = None
-    value = 0
+    title = "None"
+    description = "None"
     table = None
+    actions = []
 
-    def __init__(self, name, value):
-        self.name = name
-        self.value = value
+    def __init__(self, title: str = "No Name",
+                 table = None, actions: list = []):
+        self.title = title
+        self.table = table
+        self.actions = actions
 
 class Table:
-    name = None
-    events = []
-    size = 0
+    name = "Empty"
+    events = list()
+    rmin = -1
+    rmax = -1
+    ind = -1
     
-    def __init__(self, name):
+    def __init__(self, name: str, ind: int = -1, rmin: int = -1, rmax: int = -1):
         self.name = name
+        self.ind = ind
+        self.rmin = rmin
+        self.rmax = rmax
 
-    def setSize(self, size):
-        self.size = size
-        
+    def setRange(self, rmin, rmax):
+        self.rmin = rmin
+        self.rmax = rmax
+    
     def addEvent(self, event: Event):
-        self.events[event.value] = event
         event.table = self
+        self.events.append(event)
 
+def CreateMasterTable(TABLE_LABELS: list(), TABLE_RANGES: list(), EVENTS: dict()) -> dict:
 
-def PopulateTableEvents(eventType: str, rangeMin: int, rangeMax: int) -> list:
-    events = []
-    for i in range(rangeMin,rangeMax):
-        events.append(eventType)
-    return events
+    masterTable = {}
 
-def test():
-    DailyEventsTable = Table("Daily Events Table")
-    SUBTABLES = ["NOTHING","EVENTS","MEETINGS","OTHER"]
-    DAILY_EVENTS = []
-    
-    for subtable in SUBTABLES:
-        roll = dicemachine.RollD(8)
-        DAILY_EVENTS += [Table(subtable)]
+    for i in range(len(TABLE_LABELS)):
+        #input("Run on the "+TABLE_LABELS[i]+" table?")
+        #print("\n-----\n")
 
-    print(DAILY_EVENTS)
-    
-    #DailyEventsTable.setSize(len(DAILY_EVENTS))
-    for i in range(0,len(DAILY_EVENTS)):
-        DailyEventsTable.addEvent(Event(DAILY_EVENTS[i].name,i))
+        #init table
+        label = TABLE_LABELS[i]
+        rmin = TABLE_RANGES[i][0]
+        rmax = TABLE_RANGES[i][1]
 
-        print(DailyEventsTable.events)
-        print(DailyEventsTable.events[i].table)
+        #add events in table
+        tab = Table(label, i, rmin, rmax)
+        eve = EVENTS[label]
+        rmin = 1
+        rmax = len(eve["title"])
 
-    print(DailyEventsTable.name+" :")
-    print(DailyEventsTable.events)
-    
-    action = "y"
-    while action != "q":
-        #print(str(len(DAILY_EVENTS)))
-        roll = dicemachine.RollD(len(DAILY_EVENTS))
+        #clear out previously populated events list because
+        #python doesn't dump it automatically when reassigning to it
+        del tab.events[:]
 
-        print(roll)
-        print(DailyEventsTable.events[roll])
+        #populate events list from provided EVENTS dict
+        for j in range(rmin, rmax+1):
+
+            tab.addEvent(Event(eve["title"][j-1],tab.name,[]))
+            masterTable[label] = tab
+            inEve = copy.copy(tab.events)
+            masterTable[label].events = inEve
+
+    return masterTable
+
         
-        action = input("Again? [ENTER] ('q' to quit)\n")
+def debug():
+    TABLE_LABELS = ["Nothing","Events","Meetings","Other"]
+    TABLE_RANGES = [[1,9],[10,12],[13,15],[16,20]]
+    EVENTS = {
+        "Nothing":{
+            "title": ["Nothing Happened"],
+            "range": [1,6]
+            },
+        "Events":{
+            "title": ["Event #1","Event #2", "Event #3"],
+            "range": [1,6]
+            },
+        "Meetings":{
+            "title": ["Meetings #1","Meetings #2", "Meetings #3"],
+            "range": [1,6]
+            },
+        "Other":{
+            "title": ["Other #1","Other #2", "Other #3"],
+            "range": [1,6]
+            }
+        }
+
+    masterTable = CreateMasterTable(TABLE_LABELS, TABLE_RANGES, EVENTS)
+
+    input("Output log?")
+    for label in TABLE_LABELS:
+        t = masterTable[label]
+        print("Table Name: "+t.name)
+        print("length: "+str(len(t.events)))
+        print("---\n")
+        for e in t.events:
+            print(" --- Title: "+e.title)
+            print(" --- Description: "+e.description)
+            print(" --- Table: "+e.table.name)
+            print("")
+        print("---")
         
+debug()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
