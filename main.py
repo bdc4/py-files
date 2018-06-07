@@ -30,11 +30,17 @@ class Controller:
             self.day += 1
             self.phase = "START"
         else:
-            dayRoll = dicemachine.RollD(20)
-            for span in self.sector.eventRange:
-                if dayRoll >= span.minVal and dayRoll <= span.maxVal:
-                    self.phase = "END"
-                    return msgbox("An event was triggered on the "+str(span.name)+" table!")
+            eventTables = self.sector.eventRange
+
+            tabNames = []
+            tabRanges = []
+            for table in eventTables:
+                tabNames.append(table.name)
+                tabRanges.append([table.minVal,table.maxVal])
+
+            event = eventhandler.newDay(tabNames, tabRanges)
+            self.phase = "END"
+            return msgbox(event.title+"\n-----\n\n"+event.description)
 
     def GetOptions(self):
         #Get possible option choices
@@ -182,13 +188,13 @@ def SetCrewNames():
 
 #define global arrays
 MECS_LABELS = ["Medbay","Engines","Comms","Systems"]
-EVENT_TYPES = ["EVENTS","MEETINGS","OTHER"]
+EVENT_TYPES = ["NOTHING","EVENTS","MEETINGS","OTHER"]
 PECS = ["Physical","Electrical","Computerized"]
 
 #init Sectors
 Sector1 = Sector()
 Sector1.name = "Alpha Sector"
-Sector1.eventRange = [Range("Nothing",1,9),Range("Events",10,13),Range("Meetings",14,15),Range("Other",16,20)]
+Sector1.eventRange = [Range("NOTHING",1,9),Range("EVENTS",10,13),Range("MEETINGS",14,15),Range("OTHER",16,20)]
 
 #init Ship
 ROOMS = [None]*4

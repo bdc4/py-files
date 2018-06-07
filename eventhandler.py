@@ -1,5 +1,6 @@
 import dicemachine
 import copy
+from openpyxl import load_workbook
 
 class Event:
     title = "None"
@@ -58,12 +59,11 @@ class MasterTable:
 
             #populate events list from provided EVENTS dict
             for j in range(rmin, rmax+1):
-
-                tab.addEvent(Event(eve["title"][j-1],tab.name,[]))
+                inEve = Event(eve["title"][j-1],tab.name,[])
+                inEve.description = eve["description"][j-1]
+                tab.addEvent(inEve)
                 #outTab.append(tab)
                 #outTab[i].events = copy.copy(tab.events)
-            for e in tab.events:
-                print(e.title)
                 
             self.tables.append(tab)
             self.tables[i].events = copy.copy(tab.events)
@@ -73,7 +73,7 @@ def getTable(masterTable, ind:int = -1, label=None):
     #select random table when no args provided
     if ind == -1 and label == None:
         ind = dicemachine.RollD(20)
-        print("D20: "+str(ind))
+        #print("D20: "+str(ind))
 
     #get table by index
     if ind != -1:
@@ -94,7 +94,7 @@ def getEvent(table, ind:int = -1, label=None):
     #select random event when no args provided
     if ind == -1 and label == None:
         ind = dicemachine.RollD(len(table.events))-1
-        print("D6ish: "+str(ind))
+        #print("D6ish: "+str(ind))
 
     #get event by index
     if ind != -1:
@@ -107,24 +107,78 @@ def getEvent(table, ind:int = -1, label=None):
         print("Event not found!")
     
     return False
+
+
+def getEventsFromFile(workbook: str, sheetName: str, tabRange: list):
+
+    wb = load_workbook(filename = workbook)
+    table = wb[sheetName]
+    rows = list(table.rows)
+    tabName = rows[0][0].value
+    d = {}
+    d[tabName] = {}
+    eveTitles = []
+    eveDescripts = []
     
+    for i in range(0, len(rows[1])):
+        eveTitles.append(rows[1][i].value)
+        eveDescripts.append(rows[2][i].value)
+
+    d[tabName]["title"] = eveTitles
+    d[tabName]["description"] = eveDescripts
+    d[tabName]["range"] = tabRange
+    
+    return d
+
+def newDay(tabNames, tabRanges):
+
+    events = {}
+    for i in range(0, len(tabNames)):
+        events.update(getEventsFromFile("DailyEventsTable.xlsx", tabNames[i], tabRanges[i]))
+
+    masterTable = MasterTable(events)
+    return getEvent(getTable(masterTable))
+
+    for table in masterTable.tables:
+        for event in table.events:
+            return event.title, event.description
+
+    #Debugging
+    if __name__ == "__main__":
+        for table in masterTable.tables:
+            print("R min/max :\n"+str(table.rmin))
+            print(table.rmax)
+            for event in table.events:
+                print(event.title)
+        while True:
+            input("Continue?")
+            prEve =getEvent(getTable(masterTable)) 
+            print(prEve.title)
+            print(prEve.description)
+
+
+#### --- DEBUGGING --- ####
 def debugCreateDummyMasterTable():
     #TABLE_LABELS = ["Nothing","Events","Meetings","Other"]
     EVENTS = {
         "Nothing":{
             "title": ["Nothing Happened"],
+            "description": [""],
             "range": [1,9]
             },
         "Events":{
             "title": ["Event #1","Event #2", "Event #3"],
+            "description": ["","",""],
             "range": [10,12]
             },
         "Meetings":{
             "title": ["Meetings #1","Meetings #2", "Meetings #3"],
+            "description": ["","",""],
             "range": [13,15]
             },
         "Other":{
             "title": ["Other #1","Other #2", "Other #3"],
+            "description": ["","",""],
             "range": [16,20]
             }
         }
@@ -132,13 +186,14 @@ def debugCreateDummyMasterTable():
 
 def debug():
 
-    masterTable = debugCreateDummyMasterTable()
-    for t in masterTable.tables:
-        for e in t.events:
-            print("")
+    #masterTable = debugCreateDummyMasterTable()
 
     while True:
-        action = input("Output log?")
+        tn = input("set table name:\n")
+        events = getEventsFromFile("DailyEventsTable.xlsx", tn, [int(input("rmin:\n")),int(input("rmax:\n"))])
+        masterTable = MasterTable(events)
+        action = input("pick: l = log; r = random event\n")
+
         if action == "l":
             for table in masterTable.tables:
                 t = table
@@ -153,10 +208,13 @@ def debug():
                     print("")
                 print("---")
         elif action == "r":
-            eve = getEvent(getTable(masterTable))
-            print(eve.title) 
-
-debug()
+            while action != "x":                      
+                re = getEvent(getTable(masterTable))
+                print("")
+                print(re.title)
+                print(re.description)
+                action = input("roll again?")
+#debug()
 
 
 
