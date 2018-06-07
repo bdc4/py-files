@@ -37,14 +37,14 @@ class Table:
 class MasterTable:
     tables = []
     
-    def __init__(self, EVENTS, TABLE_RANGES) -> dict:
+    def __init__(self, EVENTS: dict) -> dict:
 
         for i in range(len(list(EVENTS))):
 
             #init table-specific vars from lists
             label = list(EVENTS)[i]
-            rmin = TABLE_RANGES[i][0]
-            rmax = TABLE_RANGES[i][1]
+            rmin = EVENTS[label]["range"][0]
+            rmax = EVENTS[label]["range"][1]
 
             #CREATE TABLE
             tab = Table(label, i, rmin, rmax)
@@ -110,26 +110,25 @@ def getEvent(table, ind:int = -1, label=None):
     
 def debugCreateDummyMasterTable():
     #TABLE_LABELS = ["Nothing","Events","Meetings","Other"]
-    TABLE_RANGES = [[1,9],[10,12],[13,15],[16,20]]
     EVENTS = {
         "Nothing":{
             "title": ["Nothing Happened"],
-            "range": [1,6]
+            "range": [1,9]
             },
         "Events":{
             "title": ["Event #1","Event #2", "Event #3"],
-            "range": [1,6]
+            "range": [10,12]
             },
         "Meetings":{
             "title": ["Meetings #1","Meetings #2", "Meetings #3"],
-            "range": [1,6]
+            "range": [13,15]
             },
         "Other":{
             "title": ["Other #1","Other #2", "Other #3"],
-            "range": [1,6]
+            "range": [16,20]
             }
         }
-    return MasterTable(EVENTS, TABLE_RANGES)
+    return MasterTable(EVENTS)
 
 def debug():
 
