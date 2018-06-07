@@ -39,7 +39,7 @@ class MasterTable:
     
     def __init__(self, TABLE_LABELS, TABLE_RANGES, EVENTS) -> dict:
 
-        masterTable = []
+        outTab = []
 
         for i in range(len(TABLE_LABELS)):
 
@@ -62,20 +62,58 @@ class MasterTable:
             for j in range(rmin, rmax+1):
 
                 tab.addEvent(Event(eve["title"][j-1],tab.name,[]))
-                masterTable.append(tab)
-                masterTable[i].events = copy.copy(tab.events)
+                #outTab.append(tab)
+                #outTab[i].events = copy.copy(tab.events)
+            for e in tab.events:
+                print(e.title)
+                
+            self.tables.append(tab)
+            self.tables[i].events = copy.copy(tab.events)
 
-        self.tables = copy.copy(masterTable)
+def getTable(masterTable, ind:int = -1, label=None):
+    
+    #select random table when no args provided
+    if ind == -1 and label == None:
+        ind = dicemachine.RollD(20)
+        print("D20: "+str(ind))
 
-def getTable(tLabel, masterTable):
-    return masterTable[tLabel]
+    #get table by index
+    if ind != -1:
+        for table in masterTable.tables:
+            if table.rmin <= ind and table.rmax >= ind:
+                return table
+    elif label != None:
+        for table in masterTable.tables:
+            if table.name == label:
+                return table
+    else:
+        print("Table not found!")
+    
+    #return False
 
-def getRandomEvent(masterTable, tLabel):
-    mRoll= dicemachine.RollD(20)
-    for table in masterTable.tables:
-        if table.rmin < mRoll and table.rmax > mRoll:
-            eRoll=dicemachine.RollD(6)
-            return table.event[eRoll]
+def getEvent(table, ind:int = -1, label=None):
+    #select random table when no args provided
+    if ind == -1 and label == None:
+        ind = dicemachine.RollD(len(table.events))-1
+        print("D6ish: "+str(ind))
+
+    #get event by index
+    if ind != -1:
+        return table.events[ind]
+    elif label != None:
+        for event in table.events:
+            if event.title == label:
+                return event
+    else:
+        print("Event not found!")
+    
+    #return False
+
+def getRandomEvent(masterTable):
+
+    table = getTable(masterTable)
+    event = getEvent(table)
+    return event
     
 def debugCreateDummyMasterTable():
     TABLE_LABELS = ["Nothing","Events","Meetings","Other"]
@@ -98,28 +136,34 @@ def debugCreateDummyMasterTable():
             "range": [1,6]
             }
         }
-
     return MasterTable(TABLE_LABELS, TABLE_RANGES, EVENTS)
 
 def debug():
 
     masterTable = debugCreateDummyMasterTable()
-
-    input("Output log?")
-    for label in TABLE_LABELS:
-        t = masterTable[label]
-        print("Table Name: "+t.name)
-        print("Table Range: "+str(t.rmin)+" - "+str(t.rmax))
-        print("# of Events: "+str(len(t.events)))
-        print("---\n")
+    for t in masterTable.tables:
         for e in t.events:
-            print(" --- Title: "+e.title)
-            print(" --- Description: "+e.description)
-            print(" --- Table: "+e.table.name)
             print("")
-        print("---")
-        
-#debug()
+
+    while True:
+        action = input("Output log?")
+        if action == "l":
+            for table in masterTable.tables:
+                t = table
+                print("Table Name: "+t.name)
+                print("Table Range: "+str(t.rmin)+" - "+str(t.rmax))
+                print("# of Events: "+str(len(t.events)))
+                print("---\n")
+                for e in t.events:
+                    print(" --- Title: "+e.title)
+                    print(" --- Description: "+e.description)
+                    print(" --- Table: "+e.table.name)
+                    print("")
+                print("---")
+        elif action == "r":
+            eve = getRandomEvent(masterTable)
+            print(eve.title) 
+debug()
 
 
 
