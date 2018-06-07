@@ -37,14 +37,12 @@ class Table:
 class MasterTable:
     tables = []
     
-    def __init__(self, TABLE_LABELS, TABLE_RANGES, EVENTS) -> dict:
+    def __init__(self, EVENTS, TABLE_RANGES) -> dict:
 
-        outTab = []
-
-        for i in range(len(TABLE_LABELS)):
+        for i in range(len(list(EVENTS))):
 
             #init table-specific vars from lists
-            label = TABLE_LABELS[i]
+            label = list(EVENTS)[i]
             rmin = TABLE_RANGES[i][0]
             rmax = TABLE_RANGES[i][1]
 
@@ -89,10 +87,11 @@ def getTable(masterTable, ind:int = -1, label=None):
     else:
         print("Table not found!")
     
-    #return False
+    return False
 
 def getEvent(table, ind:int = -1, label=None):
-    #select random table when no args provided
+    
+    #select random event when no args provided
     if ind == -1 and label == None:
         ind = dicemachine.RollD(len(table.events))-1
         print("D6ish: "+str(ind))
@@ -107,16 +106,10 @@ def getEvent(table, ind:int = -1, label=None):
     else:
         print("Event not found!")
     
-    #return False
-
-def getRandomEvent(masterTable):
-
-    table = getTable(masterTable)
-    event = getEvent(table)
-    return event
+    return False
     
 def debugCreateDummyMasterTable():
-    TABLE_LABELS = ["Nothing","Events","Meetings","Other"]
+    #TABLE_LABELS = ["Nothing","Events","Meetings","Other"]
     TABLE_RANGES = [[1,9],[10,12],[13,15],[16,20]]
     EVENTS = {
         "Nothing":{
@@ -136,7 +129,7 @@ def debugCreateDummyMasterTable():
             "range": [1,6]
             }
         }
-    return MasterTable(TABLE_LABELS, TABLE_RANGES, EVENTS)
+    return MasterTable(EVENTS, TABLE_RANGES)
 
 def debug():
 
@@ -161,8 +154,9 @@ def debug():
                     print("")
                 print("---")
         elif action == "r":
-            eve = getRandomEvent(masterTable)
+            eve = getEvent(getTable(masterTable))
             print(eve.title) 
+
 debug()
 
 
