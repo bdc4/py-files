@@ -87,4 +87,4 @@ die = Die()
 
 #start
 
-main()
+#main()
