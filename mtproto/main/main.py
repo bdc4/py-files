@@ -1,10 +1,11 @@
 
-#Event Generator
-
-import dicemachine
-import sys
+#Main
+import tools.dicemachine as dicemachine
+import tools.eventhandler as eventhandler
 from easygui.easygui import *
-import eventhandler
+import sys
+import os
+
 
 class Table:
     def __init__(self, name, minVal, maxVal):
@@ -18,10 +19,18 @@ class Table:
 class Sector:
     name = None
     eventTables = []
+    dataFile = ""
+
+    def setDataFile(self, dataFile: str):
+        #fname = dataFile
+        #this_file = os.path.abspath(__file__)
+        #this_dir = os.path.dirname(this_file)
+        #wanted_file = os.path.join(this_dir, "data/"+fname)
+        self.dataFile = dataFile
 
 class Controller:
     day = 0
-    sector = 0
+    sector = None
     comps = {"Physical":5,"Electrical":5,"Computerized":5}
     meds = 10
 
@@ -30,8 +39,8 @@ class Controller:
             self.day += 1
             self.phase = "START"
         else:
-            eventTables = self.sector.eventTables
-            event = eventhandler.newDay(eventTables)
+            currentSector = self.sector
+            event = eventhandler.newDay(currentSector)
             self.phase = "END"
             return msgbox(event.title+"\n-----\n\n"+event.description)
 
@@ -188,7 +197,7 @@ PECS = ["Physical","Electrical","Computerized"]
 Sector1 = Sector()
 Sector1.name = "Alpha Sector"
 Sector1.eventTables = [Table("NOTHING",1,20),Table("EVENTS",21,45),Table("MEETINGS",46,70),Table("OTHER",71,100)]
-
+Sector1.setDataFile("data/DailyEventsTable.xlsx")
 #init Ship
 ROOMS = [None]*4
 CrewMembers = [None]*4

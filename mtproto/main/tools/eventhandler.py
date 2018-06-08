@@ -1,5 +1,8 @@
-import dicemachine
+
+#Event Handler
 import copy
+import os
+import tools.dicemachine as dicemachine
 from openpyxl import load_workbook
 
 class Event:
@@ -132,14 +135,16 @@ def getEventsFromFile(workbook: str, sheetName: str, tabRange: list):
     
     return d
 
-def newDay(eventTables):
+def newDay(currentSector):
+    eventTables = currentSector.eventTables
+    tableData = currentSector.dataFile
+    
 
     events = {}
     for i in range(0, len(eventTables)):
-        events.update(getEventsFromFile("DailyEventsTable.xlsx", eventTables[i].name, [eventTables[i].minVal,eventTables[i].maxVal]))
+        events.update(getEventsFromFile(tableData, eventTables[i].name, [eventTables[i].minVal,eventTables[i].maxVal]))
 
     masterTable = MasterTable(events)
-    print(masterTable.tables[0].events[0].title)
     return getEvent(getTable(masterTable))
 
     for table in masterTable.tables:
