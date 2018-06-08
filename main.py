@@ -6,18 +6,18 @@ import sys
 from easygui.easygui import *
 import eventhandler
 
-class Range:
+class Table:
     def __init__(self, name, minVal, maxVal):
         self.name = name
         self.minVal = minVal
         self.maxVal = maxVal
-    def SetRange(self, minIn, maxIn):
+    def SetTable(self, minIn, maxIn):
         self.minVal = minIn
         self.maxVal = maxIn
 
 class Sector:
     name = None
-    eventRange = []
+    eventTables = []
 
 class Controller:
     day = 0
@@ -30,15 +30,8 @@ class Controller:
             self.day += 1
             self.phase = "START"
         else:
-            eventTables = self.sector.eventRange
-
-            tabNames = []
-            tabRanges = []
-            for table in eventTables:
-                tabNames.append(table.name)
-                tabRanges.append([table.minVal,table.maxVal])
-
-            event = eventhandler.newDay(tabNames, tabRanges)
+            eventTables = self.sector.eventTables
+            event = eventhandler.newDay(eventTables)
             self.phase = "END"
             return msgbox(event.title+"\n-----\n\n"+event.description)
 
@@ -194,7 +187,7 @@ PECS = ["Physical","Electrical","Computerized"]
 #init Sectors
 Sector1 = Sector()
 Sector1.name = "Alpha Sector"
-Sector1.eventRange = [Range("NOTHING",1,9),Range("EVENTS",10,13),Range("MEETINGS",14,15),Range("OTHER",16,20)]
+Sector1.eventTables = [Table("NOTHING",1,20),Table("EVENTS",21,45),Table("MEETINGS",46,70),Table("OTHER",71,100)]
 
 #init Ship
 ROOMS = [None]*4

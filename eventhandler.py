@@ -68,15 +68,21 @@ class MasterTable:
             self.tables.append(tab)
             self.tables[i].events = copy.copy(tab.events)
 
-def getTable(masterTable, ind:int = -1, label=None):
-    
+def getTable(masterTable, ind = None, label=None):
+
     #select random table when no args provided
-    if ind == -1 and label == None:
-        ind = dicemachine.RollD(20)
+    if ind == None and label == None:
+
+        #get the largest range of all the tables
+        maxRange = 0
+        for table in masterTable.tables:
+            if table.rmax > maxRange:
+                maxRange = table.rmax
+        ind = dicemachine.RollD(maxRange)
         #print("D20: "+str(ind))
 
     #get table by index
-    if ind != -1:
+    if ind != None:
         for table in masterTable.tables:
             if table.rmin <= ind and table.rmax >= ind:
                 return table
@@ -84,29 +90,25 @@ def getTable(masterTable, ind:int = -1, label=None):
         for table in masterTable.tables:
             if table.name == label:
                 return table
-    else:
-        print("Table not found!")
-    
-    return False
 
-def getEvent(table, ind:int = -1, label=None):
+def getEvent(table, ind=None, label=None):
     
     #select random event when no args provided
-    if ind == -1 and label == None:
+    if ind == None and label == None:
         ind = dicemachine.RollD(len(table.events))-1
         #print("D6ish: "+str(ind))
 
     #get event by index
-    if ind != -1:
+    if ind != None:
         return table.events[ind]
     elif label != None:
         for event in table.events:
             if event.title == label:
                 return event
-    else:
-        print("Event not found!")
-    
-    return False
+    try:
+        ind != False
+    except ValueError:
+        print("Event not found!!")
 
 
 def getEventsFromFile(workbook: str, sheetName: str, tabRange: list):
@@ -130,13 +132,14 @@ def getEventsFromFile(workbook: str, sheetName: str, tabRange: list):
     
     return d
 
-def newDay(tabNames, tabRanges):
+def newDay(eventTables):
 
     events = {}
-    for i in range(0, len(tabNames)):
-        events.update(getEventsFromFile("DailyEventsTable.xlsx", tabNames[i], tabRanges[i]))
+    for i in range(0, len(eventTables)):
+        events.update(getEventsFromFile("DailyEventsTable.xlsx", eventTables[i].name, [eventTables[i].minVal,eventTables[i].maxVal]))
 
     masterTable = MasterTable(events)
+    print(masterTable.tables[0].events[0].title)
     return getEvent(getTable(masterTable))
 
     for table in masterTable.tables:
