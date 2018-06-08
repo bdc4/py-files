@@ -3,18 +3,58 @@
 import tools.dicemachine as dicemachine
 import tools.eventhandler as eventhandler
 from easygui.easygui import *
+from openpyxl import load_workbook
 import sys
 import os
 
 
 class Table:
+    name = None
+    minVal = None
+    maxVal = None
+    events = {}
+    
     def __init__(self, name, minVal, maxVal):
         self.name = name
         self.minVal = minVal
         self.maxVal = maxVal
-    def SetTable(self, minIn, maxIn):
-        self.minVal = minIn
-        self.maxVal = maxIn
+
+    def getEvent(self, ind=None, label=None):
+    
+        #select random event when no args provided
+        if ind == None and label == None:
+            ind = dicemachine.RollD(len(self.events))-1
+            #print("D6ish: "+str(ind))
+
+        #get event by index
+        if ind != None:
+            return self.events[ind]
+        elif label != None:
+            for event in self.events:
+                if event.title == label:
+                    return event
+
+    def getEventsFromFile(self, workbook: str):
+
+        wb = load_workbook(filename = workbook)
+        table = wb[self.name]
+        rows = list(table.rows)
+        tabName = rows[0][0].value
+        d = {}
+        d[tabName] = {}
+        eveTitles = []
+        eveDescripts = []
+        
+        for i in range(0, len(rows[1])):
+            eveTitles.append(rows[1][i].value)
+            eveDescripts.append(rows[2][i].value)
+
+        d[tabName]["title"] = eveTitles
+        d[tabName]["description"] = eveDescripts
+        d[tabName]["range"] = [self.minVal,self.maxVal]
+        
+        return self.events.update(events)
+
 
 class Sector:
     name = None
@@ -22,11 +62,39 @@ class Sector:
     dataFile = ""
 
     def setDataFile(self, dataFile: str):
-        #fname = dataFile
-        #this_file = os.path.abspath(__file__)
-        #this_dir = os.path.dirname(this_file)
-        #wanted_file = os.path.join(this_dir, "data/"+fname)
         self.dataFile = dataFile
+
+    def getTable(self, ind=None, label=None):
+        eventTables = self.eventTables
+        #select random table when no args provided
+        if ind == None and label == None:
+
+            #get the largest range of all the tables
+            maxRange = 0
+            for table in eventTables:
+                if table.maxVal > maxRange:
+                    maxRange = table.minVal
+
+            ind = dicemachine.RollD(maxRange)
+
+
+        #get table by index
+        for table in eventTables:
+            if ind != None:
+                if table.rmin <= ind and table.rmax >= ind:
+                    return table
+            elif label != None:
+                if table.name == label:
+                    return table
+
+    def newDay(self):
+        eventTables = self.eventTables
+        tableData = self.dataFile
+        
+        for table in eventTables:
+            table.getEventsFromFile(tableData)
+
+        return getEvent(getTable(self))
 
 class Controller:
     day = 0
@@ -40,7 +108,7 @@ class Controller:
             self.phase = "START"
         else:
             currentSector = self.sector
-            event = eventhandler.newDay(currentSector)
+            event = currentSector.newDay()
             self.phase = "END"
             return msgbox(event.title+"\n-----\n\n"+event.description)
 
