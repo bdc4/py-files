@@ -6,13 +6,25 @@ from easygui.easygui import *
 from openpyxl import load_workbook
 import sys
 import os
+import copy
 
+class Event:
+    title = "None"
+    description = "None"
+    table = None
+    actions = []
+
+    def __init__(self, title: str = "No Name",
+                 table = None, actions: list = []):
+        self.title = title
+        self.table = table
+        self.actions = actions
 
 class Table:
     name = None
     minVal = None
     maxVal = None
-    events = {}
+    events = []
     
     def __init__(self, name, minVal, maxVal):
         self.name = name
@@ -35,25 +47,22 @@ class Table:
                     return event
 
     def getEventsFromFile(self, workbook: str):
-
-        wb = load_workbook(filename = workbook)
+        dirname = os.path.dirname(__file__)
+        inFile = os.path.join(dirname, workbook)
+        wb = load_workbook(filename = inFile)
         table = wb[self.name]
         rows = list(table.rows)
-        tabName = rows[0][0].value
-        d = {}
-        d[tabName] = {}
-        eveTitles = []
-        eveDescripts = []
+        #tabName = rows[0][0].value
         
-        for i in range(0, len(rows[1])):
-            eveTitles.append(rows[1][i].value)
-            eveDescripts.append(rows[2][i].value)
+        events = []
 
-        d[tabName]["title"] = eveTitles
-        d[tabName]["description"] = eveDescripts
-        d[tabName]["range"] = [self.minVal,self.maxVal]
+        for i in range(0, len(rows[1])):
+            e = Event()
+            e.title = rows[1][i].value
+            e.description = rows[2][i].value
+            events.append(e)
         
-        return self.events.update(events)
+        self.events = copy.copy(events)
 
 
 class Sector:
@@ -81,7 +90,7 @@ class Sector:
         #get table by index
         for table in eventTables:
             if ind != None:
-                if table.rmin <= ind and table.rmax >= ind:
+                if table.minVal <= ind and table.maxVal >= ind:
                     return table
             elif label != None:
                 if table.name == label:
@@ -93,8 +102,8 @@ class Sector:
         
         for table in eventTables:
             table.getEventsFromFile(tableData)
-
-        return getEvent(getTable(self))
+        
+        return self.getTable().getEvent()
 
 class Controller:
     day = 0
