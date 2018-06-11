@@ -1,6 +1,6 @@
 
 #Main
-import tools.dicemachine as dicemachine
+from tools.dicemachine import RollD
 import tools.eventhandler as eventhandler
 from easygui.easygui import *
 from openpyxl import load_workbook
@@ -35,7 +35,7 @@ class Table:
     
         #select random event when no args provided
         if ind == None and label == None:
-            ind = dicemachine.RollD(len(self.events))-1
+            ind = RollD(len(self.events))-1
             #print("D6ish: "+str(ind))
 
         #get event by index
@@ -71,7 +71,13 @@ class Sector:
     dataFile = ""
 
     def setDataFile(self, dataFile: str):
+        
         self.dataFile = dataFile
+        eventTables = self.eventTables
+        tableData = self.dataFile
+        
+        for table in eventTables:
+            table.getEventsFromFile(tableData)
 
     def getTable(self, ind=None, label=None):
         eventTables = self.eventTables
@@ -84,8 +90,7 @@ class Sector:
                 if table.maxVal > maxRange:
                     maxRange = table.minVal
 
-            ind = dicemachine.RollD(maxRange)
-
+            ind = RollD(maxRange)
 
         #get table by index
         for table in eventTables:
@@ -97,12 +102,6 @@ class Sector:
                     return table
 
     def newDay(self):
-        eventTables = self.eventTables
-        tableData = self.dataFile
-        
-        for table in eventTables:
-            table.getEventsFromFile(tableData)
-        
         return self.getTable().getEvent()
 
 class Controller:
@@ -238,10 +237,10 @@ def MoveCrew():
         print("Not a valid selection! Try again...")
 
 def GetRandomCrew():
-    return CrewMembers[dicemachine.RollD(4)-1]
+    return CrewMembers[RollD(4)-1]
 
 def GetRandomPECs():
-    roll = dicemachine.RollD(3)
+    roll = RollD(3)
     return PECS[roll-1]
 
 def SetCrewNames():
@@ -273,7 +272,7 @@ PECS = ["Physical","Electrical","Computerized"]
 #init Sectors
 Sector1 = Sector()
 Sector1.name = "Alpha Sector"
-Sector1.eventTables = [Table("NOTHING",1,20),Table("EVENTS",21,45),Table("MEETINGS",46,70),Table("OTHER",71,100)]
+Sector1.eventTables = [Table("NOTHING",1,50),Table("EVENTS",51,71),Table("MEETINGS",72,92),Table("OTHER",93,100)]
 Sector1.setDataFile("data/DailyEventsTable.xlsx")
 #init Ship
 ROOMS = [None]*4
