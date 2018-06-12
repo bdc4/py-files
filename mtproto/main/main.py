@@ -14,8 +14,8 @@ class Event:
     table = None
     actions = []
 
-    def __init__(self, title: str = "No Name",
-                 table = None, actions: list = []):
+    def __init__(self, title = "No Name",
+                 table = None, actions = []):
         self.title = title
         self.table = table
         self.actions = actions
@@ -46,7 +46,7 @@ class Table:
                 if event.title == label:
                     return event
 
-    def getEventsFromFile(self, workbook: str):
+    def getEventsFromFile(self, workbook):
         dirname = os.path.dirname(__file__)
         inFile = os.path.join(dirname, workbook)
         wb = load_workbook(filename = inFile)
@@ -70,7 +70,7 @@ class Sector:
     eventTables = []
     dataFile = ""
 
-    def setDataFile(self, dataFile: str):
+    def setDataFile(self, dataFile):
         
         self.dataFile = dataFile
         eventTables = self.eventTables
@@ -318,7 +318,7 @@ while None in CrewMembers:
 OPTIONS = dict(E="Next Day", D="Start Day",S="Status Report",M="Move Crew Member",RC="Get Random Crew",
                RP="Get Random PECs",X="Exit Program")
 
-def main():
+def __main__():
 
     action = ""
     GC.phase = "START"
@@ -350,4 +350,4 @@ def main():
             if ynbox("Are you sure you want to quit?","Quit Program?"):
                 sys.exit()
 
-main()
+__main__()
