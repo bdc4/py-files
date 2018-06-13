@@ -1,0 +1,3 @@
+([('main',
+   '/Users/brycecloke/repos/py-files/mtproto/src/main/dist/main',
+   'EXECUTABLE')],)
