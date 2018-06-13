@@ -1,0 +1,4 @@
+@Echo OFF
+pyinstaller main.py --add-data "data:data" -w -F -y --clean
+ECHO Done with win exes
+EXIT

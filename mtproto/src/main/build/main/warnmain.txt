@@ -14,21 +14,21 @@ missing module named java - imported by platform, /Users/brycecloke/repos/py-fil
 missing module named 'java.lang' - imported by platform, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py, xml.sax._exceptions
 missing module named vms_lib - imported by platform, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py
 missing module named winreg - imported by platform, mimetypes, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py, urllib.request
-missing module named 'org.python' - imported by copy, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py, xml.sax
 missing module named nt - imported by os, ntpath, shutil, pathlib, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py
 missing module named msvcrt - imported by subprocess, multiprocessing.spawn, multiprocessing.popen_spawn_win32, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py, getpass
 missing module named _winapi - imported by subprocess, multiprocessing.reduction, multiprocessing.connection, multiprocessing.heap, multiprocessing.popen_spawn_win32, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py
 missing module named _dummy_threading - imported by dummy_threading, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py
+missing module named 'org.python' - imported by copy, /Users/brycecloke/repos/py-files/mtproto/src/main/main.py, xml.sax
+missing module named 'pkg_resources.extern.pyparsing' - imported by pkg_resources._vendor.packaging.markers, pkg_resources._vendor.packaging.requirements
+missing module named netbios - imported by uuid
+missing module named win32wnet - imported by uuid
+missing module named __builtin__ - imported by PIL.Image, pkg_resources._vendor.pyparsing
+missing module named ordereddict - imported by pkg_resources._vendor.pyparsing
 missing module named 'win32com.shell' - imported by pkg_resources._vendor.appdirs
 missing module named 'com.sun' - imported by pkg_resources._vendor.appdirs
 missing module named com - imported by pkg_resources._vendor.appdirs
 missing module named win32api - imported by pkg_resources._vendor.appdirs
 missing module named win32com - imported by pkg_resources._vendor.appdirs
-missing module named netbios - imported by uuid
-missing module named win32wnet - imported by uuid
-missing module named __builtin__ - imported by PIL.Image, pkg_resources._vendor.pyparsing
-missing module named ordereddict - imported by pkg_resources._vendor.pyparsing
-missing module named 'pkg_resources.extern.pyparsing' - imported by pkg_resources._vendor.packaging.requirements, pkg_resources._vendor.packaging.markers
 missing module named StringIO - imported by pkg_resources._vendor.six
 missing module named __main__ - imported by pkg_resources
 missing module named pkg_resources.extern.packaging - imported by pkg_resources.extern, pkg_resources
@@ -36,7 +36,7 @@ missing module named pkg_resources.extern.appdirs - imported by pkg_resources.ex
 missing module named 'pkg_resources.extern.six.moves' - imported by pkg_resources, pkg_resources._vendor.packaging.requirements
 missing module named pkg_resources.extern.six - imported by pkg_resources.extern, pkg_resources
 missing module named 'lxml.etree' - imported by openpyxl.xml.functions
-missing module named olefile - imported by PIL.MicImagePlugin, PIL.FpxImagePlugin
+missing module named olefile - imported by PIL.FpxImagePlugin, PIL.MicImagePlugin
 missing module named UserDict - imported by PIL.PdfParser
 missing module named Tkinter - imported by easygui.easygui.boxes.utils, PIL.ImageTk, easygui.easygui.boxes.text_box, easygui.easygui.boxes.button_box, easygui.easygui.boxes.diropen_box, easygui.easygui.boxes.fileboxsetup, easygui.easygui.boxes.filesave_box, easygui.easygui.boxes.fillable_box, easygui.easygui.boxes.multi_fillable_box, easygui.easygui.boxes.choice_box
 missing module named 'PySide.QtCore' - imported by PIL.ImageQt
