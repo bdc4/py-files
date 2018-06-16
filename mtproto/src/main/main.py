@@ -1,7 +1,7 @@
 
 #Main
 from tools.dicemachine import RollD
-from easygui.easygui import *
+import easygui.easygui as gui
 from openpyxl import load_workbook
 import sys
 import os
@@ -132,7 +132,7 @@ class Controller:
             currentSector = self.sector
             event = currentSector.newDay()
             self.phase = "END"
-            return msgbox(event.title+"\n-----\n\n"+event.description)
+            return gui.msgbox(event.title+"\n-----\n\n"+event.description)
 
     def GetOptions(self):
         #Get possible option choices
@@ -192,12 +192,12 @@ class Crew:
     
     def ChangeRoom(self):
         while True:
-            where = buttonbox("Where should "+self.name+" be moved?\n","Room Reassignment",MECS_LABELS)
+            where = gui.buttonbox("Where should "+self.name+" be moved?\n","Room Reassignment",MECS_LABELS)
             for room in ROOMS:
                 if where == room.name:
                     oldRoom = self.room.name
                     self.room = room
-                    msgbox(self.name+" has been moved from "+oldRoom+" to "+self.room.name)
+                    gui.msgbox(self.name+" has been moved from "+oldRoom+" to "+self.room.name)
                     return
             print("Room not found. Try again...")
 
@@ -205,7 +205,7 @@ def ShipStatus():
     choice = ""
     while choice != "Done":
         
-        choice = buttonbox("What do you want to check on?","Ship Status",["Ship","Crew","Inventory","Done"])
+        choice = gui.buttonbox("What do you want to check on?","Ship Status",["Ship","Crew","Inventory","Done"])
         
         if choice == "Ship":
             textStr = ""
@@ -218,14 +218,14 @@ def ShipStatus():
                 if damStr == "":
                     textStr += "Nothing to report...\n"
                 textStr += "\n"
-            choice = buttonbox(textStr,"Ship Status",["Back","Done"])
+            choice = gui.buttonbox(textStr,"Ship Status",["Back","Done"])
         
         elif choice == "Crew":
             textStr = ""
             #textStr += ("\n-----\nCrew Status\n-----\n")
             for crew in CrewMembers:
                 textStr += ("\n"+crew.name+"\n-- Room: "+crew.room.name+"\n-- Health: "+crew.GetHealth()+"\n")
-            choice = buttonbox(textStr,"Crew Status",["Back","Done"])
+            choice = gui.buttonbox(textStr,"Crew Status",["Back","Done"])
         
         elif choice =="Inventory":
             textStr = ""
@@ -234,14 +234,14 @@ def ShipStatus():
                 #msgbox(comp)
                 textStr += (str(GC.comps[comp])+" "+comp+" Components\n")
             textStr += str(GC.meds)+" Medical Supplies"
-            choice = buttonbox(textStr,"Crew Status",["Back","Done"])
+            choice = gui.buttonbox(textStr,"Crew Status",["Back","Done"])
                 
 def MoveCrew():
     while True:
         crewNames = []
         for crew in CrewMembers:
             crewNames.append(crew.name)
-        who = buttonbox("Who would you like to move?","Pick Crew",crewNames)
+        who = gui.buttonbox("Who would you like to move?","Pick Crew",crewNames)
         
         for crew in CrewMembers:
             if who == crew.name:
@@ -262,7 +262,7 @@ def SetCrewNames():
     title = "Crew Names"
     fieldNames = ["Medbay Specialist","Engines Specialist","Comms Specialist","Systems Specialist"]
     fieldValues = []  # we start with blanks for the values
-    fieldValues = multenterbox(msg,title, fieldNames)
+    fieldValues = gui.multenterbox(msg,title, fieldNames)
 
     # make sure that none of the fields was left blank
     while True:
@@ -273,7 +273,7 @@ def SetCrewNames():
                 errmsg += ('"%s" is a required field.\n\n' % fieldNames[i])
         if errmsg == "":
             break # no problems found
-        fieldValues = multenterbox(errmsg, title, fieldNames, fieldValues)
+        fieldValues = gui.multenterbox(errmsg, title, fieldNames, fieldValues)
     return fieldValues
 
 #####Globals
@@ -306,7 +306,7 @@ for i in range(0, len(MECS_LABELS)):
 
 #init Crew
 while None in CrewMembers:
-    qs = ynbox("Quick Start?")
+    qs = gui.ynbox("Quick Start?")
 
     #Name crew members manually
     if qs == False:
@@ -343,7 +343,7 @@ def __main__():
         options = GC.GetOptions()
 
         #Get the user's input
-        action = buttonbox("What would you like to do?","Day "+GC.phase+": "+str(GC.day),options)
+        action = gui.buttonbox("What would you like to do?","Day "+GC.phase+": "+str(GC.day),options)
 
         #Trigger quit prompt if prompt window is closed
         if action == None:
@@ -357,11 +357,11 @@ def __main__():
         elif action == OPTIONS["M"]:
             MoveCrew()
         elif action == OPTIONS["RC"]:
-            msgbox(GetRandomCrew().name)
+            gui.msgbox(GetRandomCrew().name)
         elif action == OPTIONS["RP"]:
-            msgbox(GetRandomPECs())
+            gui.msgbox(GetRandomPECs())
         elif action == OPTIONS["X"]:
-            if ynbox("Are you sure you want to quit?","Quit Program?"):
+            if gui.ynbox("Are you sure you want to quit?","Quit Program?"):
                 sys.exit()
 
 __main__()

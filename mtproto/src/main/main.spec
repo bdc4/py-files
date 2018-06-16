@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['/Users/brycecloke/repos/py-files/mtproto/src/main'],
+             pathex=['C:\\Users\\PC\\Desktop\\py-files\\mtproto\\src\\main'],
              binaries=[],
              datas=[('data', 'data')],
              hiddenimports=[],
@@ -27,7 +27,3 @@ exe = EXE(pyz,
           upx=True,
           runtime_tmpdir=None,
           console=False )
-app = BUNDLE(exe,
-             name='main.app',
-             icon=None,
-             bundle_identifier=None)
