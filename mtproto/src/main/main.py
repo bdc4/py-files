@@ -6,6 +6,7 @@ from inspect import getsourcefile, getmodule, getsource
 
 #Tools
 import easygui.easygui as gui
+import tools.eventhandler as eventhandler
 from openpyxl import load_workbook
 from tools.dicemachine import RollD
 
@@ -132,7 +133,8 @@ class Controller:
             currentSector = self.sector
             event = currentSector.newDay()
             self.phase = "END"
-            return gui.msgbox(event.title+"\n-----\n\n"+event.description)
+            return eventhandler.Probe(ROOMS)
+            #return gui.msgbox(event.title+"\n-----\n\n"+event.description)
 
     def GetOptions(self):
         #Get possible option choices
@@ -266,15 +268,63 @@ class MECS:
 
     def __init__(self, name):
         self.name = name
+    
+    def checkAssigned(self):
+        for crew in CrewMembers:
+            if crew.room == self.name and crew.assigned == True:
+                return crew
+            else:
+                return None
+
+    def getScore(self):
+        score = 0
+        crew = self.checkAssigned()
+        if crew != None and crew.special == self.name:
+            score += 1
+        subDamage = 0
+        for sub in self.subsystems:
+            if sub.damage != 0:
+                subDamage += 1
+        if subDamage == 0:
+            score += 1
+        elif subDamage == 1:
+            score += 0
+        elif subDamage >= 2:
+            score -= 1
+        
+        return score
+
+    def SystemCheck(self):
+        total = 0
+        sysScore = self.getScore()
+        crew = self.checkAssigned()
+        if crew != None:
+            effMod = crew.effMod
+        else:
+            effMod = 0
+
+        if sysScore >= 1:
+            for i in range(0,sysScore):
+                total += RollD(6)
+            total += effMod
+
+        if total < 0:
+            total = 0
+        return total
 
 class Crew:
     name = None
     hp = 10
+    effMod = 0
+    special = None
     room = None
-
+    assigned = False
+    
     def __init__(self, name, room):
         self.name = name
         self.room = room
+        self.special = room.name
+        self.assigned = True
 
     def GetHealth(self):
         if self.hp >= 10:
