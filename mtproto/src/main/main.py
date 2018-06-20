@@ -133,7 +133,7 @@ class Controller:
             currentSector = self.sector
             event = currentSector.newDay()
             self.phase = "END"
-            return eventhandler.Probe(ROOMS)
+            return eventhandler.Probe(self)
             #return gui.msgbox(event.title+"\n-----\n\n"+event.description)
 
     def GetOptions(self):
@@ -153,14 +153,19 @@ class Controller:
             #Get MECS status and any damaged subsystems
             if choice == "Ship":
                 for room in self.mecs.items():
+                    print(room)
                     room = room[1]
+                    print(room.name)
                     textStr += ("-----\n"+room.name+"\n-----\n")
                     damStr = ""
-                    for sub in room.subsystems:
+                    for sub in room.subsystems.items():
+                        sub = sub[1]
                         if sub.damage != 0:
-                            damStr += (sub.name+" Subsystems:\n"+"    Damage: "+sub.GetSeverity()+"\n")
+                            damStr += ("\n"+sub.name+" Subsystems:\n"+"    Damage: "+sub.GetSeverity()+"\n")
                     if damStr == "":
                         textStr += "Nothing to report...\n"
+                    else:
+                        textStr += damStr
                     textStr += "\n"
             
             #Get crew status
@@ -264,13 +269,13 @@ class MECS:
                 return "Severity Level "+str(self.damage)
 
     name = None
-    subsystems = [Subsystem("Physical"),Subsystem("Electrical"),Subsystem("Computerized")]
 
     def __init__(self, name):
         self.name = name
+        self.subsystems = {"P":self.Subsystem("Physical"),"E":self.Subsystem("Electrical"),"C":self.Subsystem("Computerized")}
     
     def checkAssigned(self):
-        for crew in CrewMembers:
+        for crew in GC.crew:
             if crew.room == self.name and crew.assigned == True:
                 return crew
             else:
@@ -282,7 +287,8 @@ class MECS:
         if crew != None and crew.special == self.name:
             score += 1
         subDamage = 0
-        for sub in self.subsystems:
+        for sub in self.subsystems.items():
+            sub = sub[1]
             if sub.damage != 0:
                 subDamage += 1
         if subDamage == 0:
