@@ -24,17 +24,6 @@ missing module named _dummy_threading - imported by dummy_threading, C:\Users\PC
 missing module named org - imported by copy, C:\Users\PC\Desktop\py-files\mtproto\src\main\main.py
 missing module named pwd - imported by posixpath, shutil, tarfile, http.server, webbrowser, distutils.util, C:\Users\PC\Desktop\py-files\mtproto\src\main\main.py, netrc, getpass
 missing module named 'org.python' - imported by pickle, C:\Users\PC\Desktop\py-files\mtproto\src\main\main.py, xml.sax
-missing module named 'pkg_resources.extern.pyparsing' - imported by pkg_resources._vendor.packaging.markers, pkg_resources._vendor.packaging.requirements
-missing module named StringIO - imported by pkg_resources._vendor.six
-missing module named __builtin__ - imported by pkg_resources._vendor.pyparsing
-missing module named ordereddict - imported by pkg_resources._vendor.pyparsing
-missing module named 'com.sun' - imported by pkg_resources._vendor.appdirs
-missing module named com - imported by pkg_resources._vendor.appdirs
-missing module named __main__ - imported by pkg_resources
-missing module named pkg_resources.extern.packaging - imported by pkg_resources.extern, pkg_resources
-missing module named pkg_resources.extern.appdirs - imported by pkg_resources.extern, pkg_resources
-missing module named 'pkg_resources.extern.six.moves' - imported by pkg_resources, pkg_resources._vendor.packaging.requirements
-missing module named pkg_resources.extern.six - imported by pkg_resources.extern, pkg_resources
 missing module named 'lxml.etree' - imported by openpyxl.xml.functions
 missing module named PIL - imported by easygui.easygui.boxes.utils, openpyxl.drawing.image
 missing module named Image - imported by openpyxl.drawing.image
@@ -53,3 +42,14 @@ missing module named text_box - imported by easygui.easygui.boxes.button_box, ea
 missing module named button_box - imported by easygui.easygui.boxes.derived_boxes
 missing module named fillable_box - imported by easygui.easygui.boxes.derived_boxes
 missing module named fileboxsetup - imported by easygui.easygui.boxes.fileopen_box, easygui.easygui.boxes.filesave_box
+missing module named StringIO - imported by pkg_resources._vendor.six
+missing module named 'pkg_resources.extern.pyparsing' - imported by pkg_resources._vendor.packaging.markers, pkg_resources._vendor.packaging.requirements
+missing module named __builtin__ - imported by pkg_resources._vendor.pyparsing
+missing module named ordereddict - imported by pkg_resources._vendor.pyparsing
+missing module named 'com.sun' - imported by pkg_resources._vendor.appdirs
+missing module named com - imported by pkg_resources._vendor.appdirs
+missing module named __main__ - imported by pkg_resources
+missing module named pkg_resources.extern.packaging - imported by pkg_resources.extern, pkg_resources
+missing module named pkg_resources.extern.appdirs - imported by pkg_resources.extern, pkg_resources
+missing module named 'pkg_resources.extern.six.moves' - imported by pkg_resources, pkg_resources._vendor.packaging.requirements
+missing module named pkg_resources.extern.six - imported by pkg_resources.extern, pkg_resources
