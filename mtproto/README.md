@@ -5,9 +5,9 @@ A working-title repo for storing various python files that I'm working on
 ## mtproto
 
 ### TODO:
-Add true RCO functionality
-Serialize event actions/functions from spreadsheet data
-Add crew injuries from events
+* Add true RCO functionality
+* Serialize event actions/functions from spreadsheet data
+* Add crew injuries from events
 
 ## Other repos used within this one
 
