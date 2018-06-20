@@ -276,14 +276,14 @@ class MECS:
     
     def checkAssigned(self):
         for crew in GC.crew:
-            if crew.room == self.name and crew.assigned == True:
+            if crew.room.name == self.name and crew.assigned == True:
                 return crew
-            else:
-                return None
+        return None
 
     def getScore(self):
         score = 0
         crew = self.checkAssigned()
+
         if crew != None and crew.special == self.name:
             score += 1
         subDamage = 0
@@ -291,13 +291,14 @@ class MECS:
             sub = sub[1]
             if sub.damage != 0:
                 subDamage += 1
+
         if subDamage == 0:
             score += 1
         elif subDamage == 1:
             score += 0
         elif subDamage >= 2:
             score -= 1
-        
+
         return score
 
     def SystemCheck(self):
@@ -322,9 +323,6 @@ class Crew:
     name = None
     hp = 10
     effMod = 0
-    special = None
-    room = None
-    assigned = False
     
     def __init__(self, name, room):
         self.name = name

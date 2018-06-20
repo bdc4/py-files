@@ -56,12 +56,27 @@ def systemDamage(gc, sys = None):
 
 
 def Probe(gc):
-    choice = gui.buttonbox("There's an incoming probe. It appears to be derilict, but it could be a trap...\n\nWhat would you like to do?","Derilict Probe",["Search","Avoid"])
-    if choice == "Avoid":
-        if gc.mecs["E"].SystemCheck() > 5:
-            gui.msgbox("Successfully avoided the probe.")
-        else:
-            sys = systemDamage(gc)
-            if sys != False:
-                gui.msgbox("We were unable to dodge the probe and received damage to the "+sys.name+" system.")
-    
+    choice = None
+    while choice == None:
+        choice = gui.buttonbox(
+            "There's an incoming probe. It appears to be derilict, but it could be a trap...\n\nWhat would you like to do?",
+            "Derilict Probe",
+            ["Search","Avoid"]
+        )
+        if choice == "Avoid":
+            sCheck = gc.mecs["E"].SystemCheck()
+            if sCheck >= 5:
+                gui.msgbox("Successfully avoided the probe.")
+            else:
+                sys = systemDamage(gc)
+                if sys != False:
+                    gui.msgbox("We were unable to dodge the probe and received damage to the "+sys.name+" system.")
+        elif choice == "Search":
+            sCheck = gc.mecs["S"].SystemCheck()
+            if sCheck >= 7:
+                gui.msgbox("RCO!!!")
+            else:
+                sys = systemDamage(gc)
+                if sys != False:
+                    gui.msgbox("While attempting to salvage the probe, it exploded, damaging the "+sys.name+" system.")
+            print(sCheck, " System Score: ",gc.mecs["E"].getScore(), gc.mecs["S"].getScore())
