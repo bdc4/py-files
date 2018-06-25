@@ -22,6 +22,8 @@ class Event:
         self.title = title
         self.table = table
         self.actions = actions
+        self.sysKeys = []
+        self.resource = None
 
 class Table:
     name = None
@@ -34,7 +36,7 @@ class Table:
         self.minVal = minVal
         self.maxVal = maxVal
 
-    def getEvent(self, ind=None, label=None):
+    def getEvent(self, label=None, ind=None):
     
         #select random event when no args provided
         if ind == None and label == None:
@@ -71,12 +73,25 @@ class Table:
         
         events = []
 
+        def setValFromRow(rowVal, colVal):
+            try:
+                val = rows[rowVal][colVal].value
+            except:
+                val = "Empty"
+            return val
+
         for i in range(0, len(rows[1])):
             e = Event()
-            e.title = rows[1][i].value
-            e.description = rows[2][i].value
+            e.title = setValFromRow(1,i)
+            e.description = setValFromRow(3,i)
+            e.actions = setValFromRow(4,i)
+            e.sysKeys = setValFromRow(5,i)
+            e.resource = setValFromRow(6,i)
             events.append(e)
-        
+
+            e.actions = e.actions.split(",")
+            e.sysKeys.split(",")
+
         self.events = copy.copy(events)
 
 class Sector:
@@ -93,7 +108,7 @@ class Sector:
         for table in eventTables:
             table.getEventsFromFile(tableData)
 
-    def getTable(self, ind=None, label=None):
+    def getTable(self, label=None, ind=None):
         eventTables = self.eventTables
         #select random table when no args provided
         if ind == None and label == None:
@@ -130,16 +145,17 @@ class Controller:
             self.day += 1
             self.phase = "START"
         else:
-            currentSector = self.sector
-            event = currentSector.newDay()
+            #event = self.sector.newDay()
+            event = self.sector.getTable("EVENTS").getEvent(None,RollD(3)-1)
+            print(event.title)
             self.phase = "END"
-            return eventhandler.Probe(self)
+            return eventhandler.RCO(self,event)
             #return gui.msgbox(event.title+"\n-----\n\n"+event.description)
 
     def GetOptions(self):
         #Get possible option choices
-        if self.phase == "START": keys = ["D","S","RC","RP", "X"]
-        else: keys = ["E","S","M","X"]
+        if self.phase == "START": keys = ["D","S","RC","RP", "RES", "X"]
+        else: keys = ["E","S","M","RES","X"]
 
         options = [OPTIONS[k] for k in keys]
         return options
@@ -191,7 +207,7 @@ class Controller:
             fieldValues = []  # we start with blanks for the values
             fieldValues = gui.multenterbox(msg,title, fieldNames)
 
-            # make sure that none of the fields was left blank
+            # make sure that none of the fields were left blank
             while True:
                 if fieldValues is None: break
                 errmsg = ""
@@ -364,7 +380,7 @@ PECS_LABELS = ["Physical","Electrical","Computerized"]
 test = MECS("test").Subsystem("test")
 print(test)
 #All possible menu options
-OPTIONS = dict(E="Next Day", D="Start Day",S="Status Report",M="Move Crew Member",RC="Get Random Crew",RP="Get Random PECs",X="Exit Program")
+OPTIONS = dict(E="Next Day", D="Start Day",S="Status Report",M="Move Crew Member",RC="Get Random Crew",RP="Get Random PECs",RES="Reset",X="Exit Program")
 
 #init Sectors
 Sector1 = Sector()
@@ -409,6 +425,9 @@ def __main__():
             gui.msgbox(GC.GetRandomCrew().name)
         elif action == OPTIONS["RP"]:
             gui.msgbox(GC.GetRandomPECs())
+        elif action == OPTIONS["RES"]:
+            if gui.ynbox("Restart Program?", "Restart"):
+                os.execl(sys.executable, sys.executable, *sys.argv)
         elif action == OPTIONS["X"]:
             if gui.ynbox("Are you sure you want to quit?","Quit Program?"):
                 sys.exit()

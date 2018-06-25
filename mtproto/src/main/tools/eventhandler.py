@@ -55,28 +55,57 @@ def systemDamage(gc, sys = None):
             return False
 
 
-def Probe(gc):
+def getResources(gc, resource):
+    rolls = []
+    for crew in gc.crew:
+        if crew.assigned == True:
+            rolls.append(RollD(6))
+    print("Rolls: ",rolls)
+    rich = 6 in rolls and 1 not in rolls
+    print("Is Rich? "+str(rich))
+    print(len(rolls))
+    
+    resNum = 0
+    for i in range(0, len(rolls)):
+        if rolls[i] >= 4:
+            resNum += 1
+    
+    gc.inv[resource] += resNum
+    return resNum
+
+def RCO(gc,event):
+    
     choice = None
+    title = event.title
+    msg = event.description
+    actions = event.actions
+    sysKeys = event.sysKeys
+    resource = event.resource
+
     while choice == None:
+        
         choice = gui.buttonbox(
-            "There's an incoming probe. It appears to be derilict, but it could be a trap...\n\nWhat would you like to do?",
-            "Derilict Probe",
-            ["Search","Avoid"]
+            msg,
+            title,
+            actions
         )
+
         if choice == "Avoid":
             sCheck = gc.mecs["E"].SystemCheck()
             if sCheck >= 5:
-                gui.msgbox("Successfully avoided the probe.")
+                gui.msgbox("Successfully avoided the "+title+".")
             else:
                 sys = systemDamage(gc)
                 if sys != False:
-                    gui.msgbox("We were unable to dodge the probe and received damage to the "+sys.name+" system.")
+                    gui.msgbox("We were unable to avoid the "+title+" and received damage to the "+sys.name+" area.")
+            print("sysCheck result: "+str(sCheck), "\nSystem Scores (E,"+sysKeys[0]+"): ",gc.mecs["E"].getScore(), gc.mecs["S"].getScore())
+
         elif choice == "Search":
-            sCheck = gc.mecs["S"].SystemCheck()
-            if sCheck >= 7:
-                gui.msgbox("RCO!!!")
+            sCheck = gc.mecs[sysKeys[0]].SystemCheck()
+            if sCheck >= 6:
+                gui.msgbox("We gathered "+str(getResources(gc, resource))+" "+resource+" components from the "+title)
             else:
                 sys = systemDamage(gc)
                 if sys != False:
-                    gui.msgbox("While attempting to salvage the probe, it exploded, damaging the "+sys.name+" system.")
-            print(sCheck, " System Score: ",gc.mecs["E"].getScore(), gc.mecs["S"].getScore())
+                    gui.msgbox("While investigating the "+title+", there was an accident, damaging the "+sys.name+" area.")
+            print("sysCheck result: "+str(sCheck), "\nSystem Scores (E,"+sysKeys[0]+"): ",gc.mecs["E"].getScore(), gc.mecs["S"].getScore())
