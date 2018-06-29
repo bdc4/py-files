@@ -123,7 +123,7 @@ class Sector:
 
             ind = RollD(maxRange)
 
-        #get table by index
+        #get table by index then label
         for table in eventTables:
             if ind != None:
                 if table.minVal <= ind and table.maxVal >= ind:
@@ -144,21 +144,28 @@ class Controller:
 
     def NextDay(self):
         if self.phase == "END":
-            self.RepairShip()
+            
+            for key,room in self.mecs.items():
+                for key,sub in room.subsystems.items():
+                    sub.AttemptRepair()
+
             self.day += 1
             self.phase = "START"
         else:
             #event = self.sector.newDay()
-            event = self.sector.getTable("EVENTS").getEvent(None,RollD(3)-1)
+            event = self.sector.getTable(None,RollD(self.sector.eventTables[1].maxVal)).getEvent(None,RollD(3)-1)
             print(event.title)
             self.phase = "END"
-            return getattr(eventhandler, event.func)(self, event)
+            if event.func != None:
+                return getattr(eventhandler, event.func)(self, event)
+            else:
+                return gui.msgbox(event.description)
             #return gui.msgbox(event.title+"\n-----\n\n"+event.description)
 
     def GetOptions(self):
         #Get possible option choices
-        if self.phase == "START": keys = ["D","S","RC","RP", "RES", "X"]
-        else: keys = ["E","S","M","RES","X"]
+        if self.phase == "START": keys = ["D","S","RS","RES", "X"]
+        else: keys = ["E","REP","S","M","RES","X"]
 
         options = [OPTIONS[k] for k in keys]
         return options
@@ -190,7 +197,8 @@ class Controller:
             #Get crew status
             elif choice == "Crew":
                 for crew in self.crew:
-                    textStr += ("\n"+crew.name+"\n-- Room: "+crew.room.name+"\n-- Health: "+crew.GetHealth()+"\n")
+                    stateText = "IDLE" if crew.state == None else crew.state
+                    textStr += ("\n"+crew.name+"\n-- Room: "+crew.room.name+"\n-- Health: "+crew.GetHealth()+"\n-- State: "+stateText+"\n")
             
             #Get inventory status
             elif choice =="Inventory":
@@ -259,6 +267,9 @@ class Controller:
                 if who == crew.name:
                     break
             
+            if who == None:
+                continue
+
             if crew.ChangeRoom():
                 return
             
@@ -280,10 +291,12 @@ class Controller:
         return key, self.inv[key[:1]]
 
     def RepairShip(self):
-
+        noRepNeeded = True
         for key,room in self.mecs.items():
             for key,sub in room.subsystems.items():
+                
                 if sub.repair != None:
+                    noRepNeeded = False
                     while True:
                         modRepair = gui.buttonbox("There is currently a repair in progress.\n\n"+
                         "Location: "+room.name+"\n"+
@@ -313,14 +326,13 @@ class Controller:
                             else:
                                 self.inv[sub.sid] -= addRes
                                 sub.repair.dice += addRes
+                                sub.repair.chance = sub.repair.GetChance(sub.sid)
                             break
                         else:
                             break      
                                 
-
-
-
                 if (sub.damage != 0 and sub.repair == None):
+                    noRepNeeded = False
                     startRepair = False
                     while startRepair != True:
                         if gui.ynbox("The "+sub.name+" Subsystems in the "+room.name+" area appear to have taken damage.\n\n"+"Damage: "+sub.GetSeverity()+"\n\nWould you like to try and repair it?"):
@@ -329,9 +341,15 @@ class Controller:
                             for crew in self.crew:
                                 crewNames.append(crew.name)
                                 repStr += crew.GetRepairStats(sub.sid)
-                            repairCrew = self.GetCrewByName(gui.buttonbox("Who should be moved to repair the damage?\n\n"+repStr,
-                            "Pick Crew",crewNames))
                             
+                            while True:
+                                repairCrew = self.GetCrewByName(gui.buttonbox("Who should be moved to repair the damage?\n\n"+repStr,
+                                "Pick Crew",crewNames))
+                                if repairCrew.state == "REPAIR":
+                                    gui.msgbox("This crew member cannot be removed because they are already repairing another system. To move this crew member, finish or cancel the other repair.")
+                                    continue
+                                else:
+                                    break                   
                             repairDice = gui.integerbox("How many "+sub.name+" Components should be allocated for repair?\n"+
                             "(Currently "+str(self.inv[sub.sid])+" "+sub.name+" Components in Inventory)", "Pick Components",0,0,self.inv[sub.sid])
                             
@@ -360,11 +378,11 @@ class Controller:
                                 sub.repair = Repair(repairCrew,repairDice, sub.sid)
                                 self.inv[sub.sid] -= repairDice
 
-
                         else:
                             break
 
-                sub.AttemptRepair()
+        if noRepNeeded:
+            return gui.msgbox("No repairs are needed. Keep up the good work!")
 
 class MECS(object):
     #MECS vars
@@ -447,17 +465,29 @@ class Subsystem(MECS):
                 self.damage -= 1
                 if self.damage == 0:
                     gui.msgbox(self.repair.crew.name+" completed repairs on the "+self.name+" Subsystems in the "+self.room.name)
+                    self.repair.crew.state = None
+                    self.repair.crew.ChangeRoom()
+                    self.repair = None
                 else:
                     gui.msgbox(self.repair.crew.name+" has reduced the damage level of the "+self.name+" Subsystems in the "+self.room.name+" to "+self.GetSeverity())
-                    self.repair = None
             else:
                 gui.msgbox(self.repair.crew.name+" is still working on repairs to the "+self.name+" Subsystems in the "+self.room.name+" Area.")
 
 class Repair(Subsystem):
+    
+    crew = None
+    dice = 0
+
+    def GetChance(self, sid):
+        if self.crew != None:
+            return int(100*self.dice*(self.crew.pecProf[sid]/6))
+    
     def __init__(self, crew, dice, sid):
         self.crew = crew
         self.dice = dice
-        self.chance = int(100*self.dice*(self.crew.pecProf[sid]/6))
+        self.chance = self.GetChance(sid)
+
+    
 
 class Crew:
     name = None
@@ -503,22 +533,37 @@ class Crew:
             
             
             where = gui.buttonbox("Where should "+self.name+" be moved?\n\nName: "+self.name+"\nCurrent Location: "+self.room.name,"Room Reassignment",MECS_LABELS)
+            oldState = self.state
+
             for key,room in GC.mecs.items():
                 if where == room.name:
 
-                    for crew in GC.crew:
-                        if crew.room == room and crew != self and crew.state == "ACTIVE":
+                    crew = room.checkAssigned()
+                    if crew != None:
+                        if crew != self and crew.state == "ACTIVE":
                             if gui.ynbox("The "+room.name+" Area is actively being manned by "+crew.name+
                             ".\n\nWould you like "+self.name+" to take over for them?"):
                                 crew.state = None
                                 self.state = "ACTIVE"
                             else:
                                 self.state = None
+                    else:
+                        self.state = "ACTIVE"
+                        if not gui.ynbox("Nobody is currently stationing the "+room.name+" Area.\n\nWould you like "+self.name+
+                        " to station it?"):
+                            self.state = None
 
+                    stateText = "ASSIGNED" if self.state == "ACTIVE" else "MOVED"        
+                    
                     oldRoom = self.room.name
                     self.room = room
-                    gui.msgbox(self.name+" has been moved from "+oldRoom+" to "+self.room.name)
-                    return
+                    if oldRoom != self.room.name:
+                        gui.msgbox(self.name+" has been "+stateText+" from "+oldRoom+" to the "+self.room.name+" Area.")
+                    elif oldState != self.state:
+                        gui.msgbox(self.name+" has been "+stateText+" to the "+self.room.name+" Area.")
+                    else:
+                        gui.msgbox("Move cancelled.")
+                    return True
             print("Room not found. Try again...")
 
 #####Globals
@@ -529,7 +574,7 @@ PECS_LABELS = ["Physical","Electrical","Computerized"]
 #test = MECS("test").Subsystem("test")
 #print(test)
 #All possible menu options
-OPTIONS = dict(E="Next Day", D="Start Day",S="Status Report",M="Move Crew Member",RC="Get Random Crew",RP="Get Random PECs",RES="Reset",X="Exit Program")
+OPTIONS = dict(E="End Day", D="Start Day",S="Status Report",M="Move Crew Member",REP="Repair Ship", RS="Damage Random System", RC="Get Random Crew",RP="Get Random PECs",RES="Reset",X="Exit Program")
 
 #init Sectors
 Sector1 = Sector()
@@ -570,8 +615,10 @@ def __main__():
             GC.ShipStatus()
         elif action == OPTIONS["M"]:
             GC.MoveCrew()
-        elif action == OPTIONS["RC"]:
-            gui.msgbox(GC.GetRandomCrew().name)
+        elif action == OPTIONS["REP"]:
+            GC.RepairShip()
+        elif action == OPTIONS["RS"]:
+            eventhandler.systemDamage(GC)
         elif action == OPTIONS["RP"]:
             gui.msgbox(GC.GetRandomPECs())
         elif action == OPTIONS["RES"]:
