@@ -14,6 +14,7 @@ from tools.dicemachine import RollD
 class Event:
     title = "None"
     description = "None"
+    func = None 
     table = None
     actions = []
 
@@ -83,14 +84,15 @@ class Table:
         for i in range(0, len(rows[1])):
             e = Event()
             e.title = setValFromRow(1,i)
+            e.func = setValFromRow(2,i)
             e.description = setValFromRow(3,i)
             e.actions = setValFromRow(4,i)
             e.sysKeys = setValFromRow(5,i)
             e.resource = setValFromRow(6,i)
             events.append(e)
 
-            e.actions = e.actions.split(",")
-            e.sysKeys.split(",")
+            if e.actions != None: e.actions = e.actions.split(",")
+            if e.sysKeys != None: e.sysKeys.split(",")
 
         self.events = copy.copy(events)
 
@@ -142,6 +144,7 @@ class Controller:
 
     def NextDay(self):
         if self.phase == "END":
+            self.RepairShip()
             self.day += 1
             self.phase = "START"
         else:
@@ -149,7 +152,7 @@ class Controller:
             event = self.sector.getTable("EVENTS").getEvent(None,RollD(3)-1)
             print(event.title)
             self.phase = "END"
-            return eventhandler.RCO(self,event)
+            return getattr(eventhandler, event.func)(self, event)
             #return gui.msgbox(event.title+"\n-----\n\n"+event.description)
 
     def GetOptions(self):
@@ -254,45 +257,122 @@ class Controller:
             
             for crew in self.crew:
                 if who == crew.name:
-                    crew.ChangeRoom()
-                    return
+                    break
+            
+            if crew.ChangeRoom():
+                return
+            
+            
             
             print("Not a valid selection! Try again...")
     
     def GetRandomCrew(self):
         return self.crew[RollD(4)-1]
 
+    def GetCrewByName(self, name):
+        for crew in self.crew:
+            if crew.name == name:
+                return crew
+
     def GetRandomPECs(self):
         roll = RollD(3)
         key = PECS_LABELS[roll-1]
         return key, self.inv[key[:1]]
 
-class MECS:
+    def RepairShip(self):
 
-    class Subsystem:
-        name = None
-        damage = 0
-        sid = None
+        for key,room in self.mecs.items():
+            for key,sub in room.subsystems.items():
+                if sub.repair != None:
+                    while True:
+                        modRepair = gui.buttonbox("There is currently a repair in progress.\n\n"+
+                        "Location: "+room.name+"\n"+
+                                " ---- Subsystem: "+sub.name+"\n"+
+                                " ---- Damage: "+sub.GetSeverity()+"\n\n"+
+                                "Crew assigned to repair: "+str(sub.repair.crew.name)+"\n"+
+                                "Number of "+sub.sid+" components to use: "+str(sub.repair.dice)+"\n"+
+                                "Chance of repair per day: "+str(sub.repair.chance)+"%\n\n"+
+                                "What would you like to do?","Repair in Progress: ("+room.name+","+sub.name+")",
+                                ["Move Repairer","Add Resources","Continue"]
+                                )
+                        
+                        if modRepair == "Move Repairer":
+                            conf = gui.ynbox("WARNING! Moving the crew member performing the repairs will keep your repair progress,"+
+                            " but you will lose any resources dedicated to the repair so far.\n\nAre your sure you would like to reassign "+sub.repair.crew.name+"?")
+                            if conf:
+                                crew = sub.repair.crew
+                                sub.repair = None
+                                crew.state = None
+                                crew.ChangeRoom()
+                                break
+                        elif modRepair == "Add Resources":
+                            addRes = gui.integerbox("How many "+sub.name+" Components should be allocated for repair?\n"+
+                            "(Currently "+str(self.inv[sub.sid])+" "+sub.name+" Components in Inventory)", "Pick Components",0,0,self.inv[sub.sid])
+                            if addRes == None or addRes == 0:
+                                continue
+                            else:
+                                self.inv[sub.sid] -= addRes
+                                sub.repair.dice += addRes
+                            break
+                        else:
+                            break      
+                                
 
-        def __init__(self, name):
-            self.name = name
-            self.sid = name[:1]
-        
-        def GetSeverity(self):
-            if self.damage == 0:
-                return "No Damage"
-            else:
-                return "Severity Level "+str(self.damage)
 
+
+                if (sub.damage != 0 and sub.repair == None):
+                    startRepair = False
+                    while startRepair != True:
+                        if gui.ynbox("The "+sub.name+" Subsystems in the "+room.name+" area appear to have taken damage.\n\n"+"Damage: "+sub.GetSeverity()+"\n\nWould you like to try and repair it?"):
+                            crewNames = []
+                            repStr = ""
+                            for crew in self.crew:
+                                crewNames.append(crew.name)
+                                repStr += crew.GetRepairStats(sub.sid)
+                            repairCrew = self.GetCrewByName(gui.buttonbox("Who should be moved to repair the damage?\n\n"+repStr,
+                            "Pick Crew",crewNames))
+                            
+                            repairDice = gui.integerbox("How many "+sub.name+" Components should be allocated for repair?\n"+
+                            "(Currently "+str(self.inv[sub.sid])+" "+sub.name+" Components in Inventory)", "Pick Components",0,0,self.inv[sub.sid])
+                            
+                            while repairDice == 0:
+                                if not gui.ynbox("The number of resources allocated must be greater than 0 to start a repair. Would you like to cancel this repair?","Insufficent Resources Allocated!"):
+                                    repairDice = gui.integerbox("How many "+sub.name+" Components should be allocated for repair?\n"+
+                                    "(Currently "+str(self.inv[sub.sid])+" "+sub.name+" Components in Inventory)", "Pick Components",0,0,self.inv[sub.sid])
+                                else:
+                                    continue
+
+                            if repairDice == None:
+                                continue
+
+                            startRepair = gui.ynbox("The following repair will take place:\n\n"+
+                            "Location: "+room.name+"\n"+
+                            " ---- Subsystem: "+sub.name+"\n"+
+                            " ---- Damage: "+sub.GetSeverity()+"\n\n"+
+                            "Crew assigned to repair: "+str(repairCrew.name)+"\n"+
+                            "Number of "+sub.sid+" components to use: "+str(repairDice)+"\n"+
+                            "Chance of repair per day: "+str(int(100*repairDice*(repairCrew.pecProf[sub.sid]/6)))+"%"+
+                            "\n\nBegin Repair?","Begin Repair?")
+
+                            if startRepair:
+                                repairCrew.room = room
+                                repairCrew.state = "REPAIR"
+                                sub.repair = Repair(repairCrew,repairDice, sub.sid)
+                                self.inv[sub.sid] -= repairDice
+
+
+                        else:
+                            break
+
+                sub.AttemptRepair()
+
+class MECS(object):
+    #MECS vars
     name = None
 
-    def __init__(self, name):
-        self.name = name
-        self.subsystems = {"P":self.Subsystem("Physical"),"E":self.Subsystem("Electrical"),"C":self.Subsystem("Computerized")}
-    
     def checkAssigned(self):
         for crew in GC.crew:
-            if crew.room.name == self.name and crew.assigned == True:
+            if crew.room.name == self.name and crew.state == "ACTIVE":
                 return crew
         return None
 
@@ -335,16 +415,62 @@ class MECS:
             total = 0
         return total
 
+    def __init__(self, name):
+        self.name = name
+        self.subsystems = {"P":Subsystem("Physical",self),"E":Subsystem("Electrical",self),"C":Subsystem("Computerized",self)}
+
+        
+
+class Subsystem(MECS):
+
+    #Subsystem Vars
+    repair = None
+
+    def __init__(self, name, room):
+        self.name = name
+        self.room = room
+        self.sid = name[:1]
+        self.damage = 0
+    
+    def GetSeverity(self):
+        if self.damage == 0:
+            return "No Damage"
+        else:
+            return "Severity Level "+str(self.damage)
+
+    def AttemptRepair(self):
+        if self.repair == None or self.damage == 0:
+            return
+        else:
+            roll = RollD(100)
+            if roll <= self.repair.chance:
+                self.damage -= 1
+                if self.damage == 0:
+                    gui.msgbox(self.repair.crew.name+" completed repairs on the "+self.name+" Subsystems in the "+self.room.name)
+                else:
+                    gui.msgbox(self.repair.crew.name+" has reduced the damage level of the "+self.name+" Subsystems in the "+self.room.name+" to "+self.GetSeverity())
+                    self.repair = None
+            else:
+                gui.msgbox(self.repair.crew.name+" is still working on repairs to the "+self.name+" Subsystems in the "+self.room.name+" Area.")
+
+class Repair(Subsystem):
+    def __init__(self, crew, dice, sid):
+        self.crew = crew
+        self.dice = dice
+        self.chance = int(100*self.dice*(self.crew.pecProf[sid]/6))
+
 class Crew:
     name = None
     hp = 10
     effMod = 0
+    pecProf = {"P":1,"E":1,"C":1}
+    state = None
     
     def __init__(self, name, room):
         self.name = name
         self.room = room
         self.special = room.name
-        self.assigned = True
+        self.state = "ACTIVE"
 
     def GetHealth(self):
         if self.hp >= 10:
@@ -360,12 +486,35 @@ class Crew:
         else:
             return "Dead"
     
+    def GetRepairStats(self, subID):
+        repStr = self.name+"\n--- Current Location: "+self.room.name+"\n--- "+subID+" Proficency Level: "+str(self.pecProf[subID])+"\n\n"
+        return repStr
+
     def ChangeRoom(self):
         while True:
-            where = gui.buttonbox("Where should "+self.name+" be moved?\n","Room Reassignment",MECS_LABELS)
-            for room in GC.mecs.items():
-                room = room[1]
+            
+            if self.state == "REPAIR":
+                gui.msgbox("This crew member cannot be moved because they are currently in the middle of a repair. "+
+                "If you would like to reassign them, you must first cancel the repair.")
+                return False
+            elif self.state == "ACTIVE":
+                if not gui.ynbox(self.name+" is actively manning the "+self.room.name+" Area. Are you sure you'd like to reassign them?"):
+                    return False
+            
+            
+            where = gui.buttonbox("Where should "+self.name+" be moved?\n\nName: "+self.name+"\nCurrent Location: "+self.room.name,"Room Reassignment",MECS_LABELS)
+            for key,room in GC.mecs.items():
                 if where == room.name:
+
+                    for crew in GC.crew:
+                        if crew.room == room and crew != self and crew.state == "ACTIVE":
+                            if gui.ynbox("The "+room.name+" Area is actively being manned by "+crew.name+
+                            ".\n\nWould you like "+self.name+" to take over for them?"):
+                                crew.state = None
+                                self.state = "ACTIVE"
+                            else:
+                                self.state = None
+
                     oldRoom = self.room.name
                     self.room = room
                     gui.msgbox(self.name+" has been moved from "+oldRoom+" to "+self.room.name)
@@ -377,8 +526,8 @@ class Crew:
 #define global arrays
 MECS_LABELS = ["Medbay","Engines","Comms","Systems"]
 PECS_LABELS = ["Physical","Electrical","Computerized"]
-test = MECS("test").Subsystem("test")
-print(test)
+#test = MECS("test").Subsystem("test")
+#print(test)
 #All possible menu options
 OPTIONS = dict(E="Next Day", D="Start Day",S="Status Report",M="Move Crew Member",RC="Get Random Crew",RP="Get Random PECs",RES="Reset",X="Exit Program")
 

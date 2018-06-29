@@ -54,11 +54,10 @@ def systemDamage(gc, sys = None):
             gui.msgbox("The "+sys.name+" system took damage, but it is already damaged beyond repair.")
             return False
 
-
 def getResources(gc, resource):
     rolls = []
     for crew in gc.crew:
-        if crew.assigned == True:
+        if crew.state == "ACTIVE":
             rolls.append(RollD(6))
     print("Rolls: ",rolls)
     rich = 6 in rolls and 1 not in rolls
