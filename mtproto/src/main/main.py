@@ -141,6 +141,7 @@ class Controller:
     inv = {"P":5,"E":5,"C":5,"M":10}
     mecs = {"M":None,"E":None,"C":None,"S":None}
     crew = [None]*4
+    annoySound = False
 
     def NextDay(self):
         if self.phase == "END":
@@ -153,8 +154,9 @@ class Controller:
             self.phase = "START"
         else:
             #event = self.sector.newDay()
-            event = self.sector.getTable(None,RollD(self.sector.eventTables[1].maxVal)).getEvent(None,RollD(3)-1)
+            event = self.sector.newDay()
             print(event.title)
+            print(event.func)
             self.phase = "END"
             if event.func != None:
                 return getattr(eventhandler, event.func)(self, event)
@@ -164,7 +166,7 @@ class Controller:
 
     def GetOptions(self):
         #Get possible option choices
-        if self.phase == "START": keys = ["D","S","RS","RES", "X"]
+        if self.phase == "START": keys = ["D","S","RES", "X"]
         else: keys = ["E","REP","S","M","RES","X"]
 
         options = [OPTIONS[k] for k in keys]
@@ -579,7 +581,7 @@ OPTIONS = dict(E="End Day", D="Start Day",S="Status Report",M="Move Crew Member"
 #init Sectors
 Sector1 = Sector()
 Sector1.name = "Alpha Sector"
-Sector1.eventTables = [Table("NOTHING",1,50),Table("EVENTS",51,71),Table("MEETINGS",72,92),Table("OTHER",93,100)]
+Sector1.eventTables = [Table("NOTHING",1,59),Table("EVENTS",60,75),Table("MEETINGS",76,90),Table("OTHER",90,100)]
 Sector1.setDataFile("data/DailyEventsTable.xlsx")
 
 #init Game Controller (GC)
